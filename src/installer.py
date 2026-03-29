@@ -29,6 +29,9 @@ class Installer:
                 self._unzip_file(f"C:\\{key}.zip", "C:\\", key)
                 print("Postupujte podle pokynů v novém okně.")
                 self._run_program("C:\\V6-INSTALL\\setup.exe" if key == "Editor" else "C:\\V6-INSTALL\\Install.exe")
+                if key == "Editor":
+                    self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2010redist_x64.exe")
+                    self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2012redist_x64.exe")
                 print(f"{"Instalace" if is_install else "Aktualizace"} {key} byla dokončena")
             except Exception as ex:
                 print(f"\033[31mPři {"instalaci" if is_install else "aktualizaci"} {key} nastala chyba typu {ex}. Tato položka bude přeskočena! \033[0m")
