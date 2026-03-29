@@ -14,13 +14,14 @@ from urls import (
     IG_FULL_DOWNLOAD_URL,
     IG_PARTIAL_DOWNLOAD_URL,
 )
+from enums.module import Module
 
 
 class Installer:
     def __init__(self, session: Session):
         self._session = session
 
-    def start_downloads(self, selected: dict[str, bool], is_install: bool) -> None:
+    def start_downloads(self, selected: dict[Module, bool], is_install: bool) -> None:
         for key, val in selected.items():
             if not val:
                 continue
@@ -28,8 +29,8 @@ class Installer:
                 self._download_from_url(key, is_install)
                 self._unzip_file(f"C:\\{key}.zip", "C:\\", key)
                 print("Postupujte podle pokynů v novém okně.")
-                self._run_program("C:\\V6-INSTALL\\setup.exe" if key == "Editor" else "C:\\V6-INSTALL\\Install.exe")
-                if key == "Editor":
+                self._run_program("C:\\V6-INSTALL\\setup.exe" if key == Module.EDITOR else "C:\\V6-INSTALL\\Install.exe")
+                if key == Module.EDITOR:
                     self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2010redist_x64.exe")
                     self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2012redist_x64.exe")
                 print(f"{"Instalace" if is_install else "Aktualizace"} {key} byla dokončena")
@@ -38,15 +39,15 @@ class Installer:
 
     def _translate_url(self, name: str, is_install: bool) -> str:
         match name:
-            case "Editor":
+            case Module.EDITOR:
                 return EDITOR_DOWNLOAD_URL
-            case "DTMCR":
+            case Module.DTMCR:
                 return DTMCR_FULL_DOWNLOAD_URL if is_install else DTMCR_PARTIAL_DOWNLOAD_URL
-            case "3D":
+            case Module.THREED:
                 return D3_FULL_DOWNLOAD_URL if is_install else D3_PARTIAL_DOWNLOAD_URL
-            case "IG":
+            case Module.IG:
                 return IG_FULL_DOWNLOAD_URL if is_install else IG_PARTIAL_DOWNLOAD_URL
-            case "DWG":
+            case Module.DWG:
                 return DWG_DONWLOAD_URL
             case _:
                 raise ValueError(f"Unsupported program: {name}")

@@ -1,15 +1,15 @@
 from os import system
 from keyboard import add_hotkey, clear_all_hotkeys
-
+from enums.module import Module
 
 class SelectionController:
     def __init__(self):
-        self._selected: dict[str, bool] = {
-            "Editor": False,
-            "DTMCR": False,
-            "3D": False,
-            "IG": False,
-            "DWG": False,
+        self._selected: dict[Module, bool] = {
+            Module.EDITOR: False,
+            Module.DTMCR: False,
+            Module.THREED: False,
+            Module.IG: False,
+            Module.DWG: False,
         }
         self._is_install = False
         self._confirmed = 0
@@ -26,19 +26,19 @@ class SelectionController:
         for char in string:
             match char:
                 case "1":
-                    self._selected["Editor"] = not self._selected["Editor"]
+                    self._selected[Module.EDITOR] = not self._selected[Module.EDITOR]
                     continue
                 case "2":
-                    self._selected["DTMCR"] = not self._selected["DTMCR"]
+                    self._selected[Module.DTMCR] = not self._selected[Module.DTMCR]
                     continue
                 case "3":
-                    self._selected["IG"] = not self._selected["IG"]
+                    self._selected[Module.IG] = not self._selected[Module.IG]
                     continue
                 case "4":
-                    self._selected["3D"] = not self._selected["3D"]
+                    self._selected[Module.THREED] = not self._selected[Module.THREED]
                     continue
                 case "5":
-                    self._selected["DWG"] = not self._selected["DWG"]
+                    self._selected[Module.DWG] = not self._selected[Module.DWG]
                     continue
                 case "6":
                     self._is_install = not self._is_install
@@ -47,11 +47,11 @@ class SelectionController:
                     continue
 
     def select_wanted(self) -> None:
-        add_hotkey("num 1", self._switch_selection, args=("Editor",))
-        add_hotkey("num 2", self._switch_selection, args=("DTMCR",))
-        add_hotkey("num 3", self._switch_selection, args=("IG",))
-        add_hotkey("num 4", self._switch_selection, args=("3D",))
-        add_hotkey("num 5", self._switch_selection, args=("DWG",))
+        add_hotkey("num 1", self._switch_selection, args=(Module.EDITOR,))
+        add_hotkey("num 2", self._switch_selection, args=(Module.DTMCR,))
+        add_hotkey("num 3", self._switch_selection, args=(Module.IG,))
+        add_hotkey("num 4", self._switch_selection, args=(Module.THREED,))
+        add_hotkey("num 5", self._switch_selection, args=(Module.DWG,))
         add_hotkey("num 6", self._switch_install)
         add_hotkey("num enter", self._enter_process)
         self._redraw_selection()
@@ -71,19 +71,19 @@ class SelectionController:
         print("Pro potvrzení stiskněte ENTER")
         print()
         print(
-            f"1. [{'X' if self._selected['Editor'] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Základního Grafického Editoru"
+            f"1. [{'X' if self._selected[Module.EDITOR] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Základního Grafického Editoru"
         )
         print(
-            f"2. [{'X' if self._selected['DTMCR'] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace DTMČR"
+            f"2. [{'X' if self._selected[Module.DTMCR] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace DTMČR"
         )
         print(
-            f"3. [{'X' if self._selected['IG'] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace IG"
+            f"3. [{'X' if self._selected[Module.IG] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace IG"
         )
         print(
-            f"4. [{'X' if self._selected['3D'] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace 3D"
+            f"4. [{'X' if self._selected[Module.THREED] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace 3D"
         )
         print(
-            f"5. [{'X' if self._selected['DWG'] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace DWG"
+            f"5. [{'X' if self._selected[Module.DWG] else ' '}] {'Instalace' if self._is_install else 'Aktualizace'} Aplikace DWG"
         )
         print(f"6. Přepnout do režimu {'Aktualizace' if self._is_install else 'Nové Instalace'}")
 
