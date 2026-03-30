@@ -1,8 +1,8 @@
 from enum import Enum
 
 class Module(Enum):
-    EDITOR = 1
-    DTMCR = 2
-    THREED = 3
-    IG = 4
-    DWG = 5
+    EDITOR = "Editor"
+    DTMCR = "DTMCR"
+    THREED = "3D"
+    IG = "IG"
+    DWG = "DWG"
