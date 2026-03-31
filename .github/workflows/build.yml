@@ -29,12 +29,12 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --icon="icon.ico" --name "GeoStore V6 - Install & Update" src/main.py
+          pyinstaller --onefile --icon="icon.ico" --name "GeoStore-V6-Install-and-Update" src/main.py
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/GeoStore V6 - Install & Update.exe
+          files: dist/GeoStore-V6-Install-and-Update.exe
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           draft: false
