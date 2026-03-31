@@ -203,12 +203,11 @@ class GeoStoreWindow(tk.Tk):
     def _execute_installer_workflow(self, selected: dict[Module, bool], is_install: bool) -> None:
         processed = self._installer.start_downloads(selected, is_install)
 
-        if not is_install:
-            failed_time = datetime.fromtimestamp(0)
-            for module in processed:
-                newest = self._checker.get_newest_update_time(module)
-                if newest != failed_time:
-                    self._checker.update_last_saved_time(module, newest)
+        failed_time = datetime.fromtimestamp(0)
+        for module in processed:
+            newest = self._checker.get_newest_update_time(module)
+            if newest != failed_time:
+                self._checker.update_last_saved_time(module, newest)
 
         self.after(0, lambda: self._on_workflow_finished(processed, is_install))
 
