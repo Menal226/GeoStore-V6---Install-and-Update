@@ -1,4 +1,5 @@
-from window import GeoStoreWindow, ensure_admin_on_start
+from gui.geostore_window import GeoStoreWindow
+from startup.admin import ensure_admin_on_start
 
 
 def main():

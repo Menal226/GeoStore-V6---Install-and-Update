@@ -1,10 +1,13 @@
+import sys
 from os import path, remove
 from shutil import rmtree
 from subprocess import run
-import sys
 from zipfile import ZipFile
+
 from requests import Session
 from tqdm import tqdm
+
+from enums.module import Module
 from resources.urls import (
     D3_FULL_DOWNLOAD_URL,
     D3_PARTIAL_DOWNLOAD_URL,
@@ -15,7 +18,6 @@ from resources.urls import (
     IG_FULL_DOWNLOAD_URL,
     IG_PARTIAL_DOWNLOAD_URL,
 )
-from enums.module import Module
 
 
 class Installer:
@@ -80,13 +82,13 @@ class Installer:
                     file.write(chunk)
                     progress_bar.update(len(chunk))
 
-        print(f"✅ Stahování {name.value} dokončeno!")
+        print(f"Stahování {name.value} dokončeno!")
 
     def _unzip_file(self, old: str, new: str, name: str) -> None:
         print(f"Probíhá extrahování souboru {name}.zip")
         with ZipFile(old, "r") as zip_ref:
             zip_ref.extractall(new)
-        print(f"✅ Extrahování souboru {name}.zip dokončeno")
+        print(f"Extrahování souboru {name}.zip dokončeno")
         remove(old)
 
     def _run_program(self, exe_path: str) -> None:

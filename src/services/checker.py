@@ -1,16 +1,19 @@
+import json
+from datetime import datetime
+from os import getenv
+from pathlib import Path
+
 from requests import Session
+
 from enums.module import Module
 from resources.urls import GEOSTORE_URL
-from datetime import datetime
-from pathlib import Path
-from os import getenv
-import json
+
 
 class Checker:
     def __init__(self, session: Session):
         self._session = session
-        self._save_path =  Path(getenv("APPDATA")) / "GeoStore Updater" / "save_times"
-    
+        self._save_path = Path(getenv("APPDATA")) / "GeoStore Updater" / "save_times"
+
     def _name_to_payload(self, name: Module) -> dict[str, str]:
         match name:
             case Module.EDITOR | Module.DTMCR:
@@ -26,12 +29,9 @@ class Checker:
             "user_seat": "",
             "user_role": arg2,
             "folder_id": arg1,
-            "parameters": [
-                {"name": "page", "type": "N", "value": 1},
-                {"name": "filter", "value": None}
-            ]
+            "parameters": [{"name": "page", "type": "N", "value": 1}, {"name": "filter", "value": None}],
         }
-    
+
     def _process_response(self, response: dict, name: Module) -> datetime:
         match name:
             case Module.EDITOR:
@@ -50,7 +50,7 @@ class Checker:
             if possible[3] == file:
                 return datetime.strptime(possible[4], "%d.%m.%Y")
         return datetime.fromtimestamp(0)
-    
+
     def get_newest_update_time(self, name: Module) -> datetime:
         resp = self._session.post(GEOSTORE_URL, json=self._name_to_payload(name))
         if resp.status_code != 200:
@@ -63,7 +63,7 @@ class Checker:
             return datetime.fromtimestamp(0)
 
         return self._process_response(resp_json, name)
-    
+
     def _get_latest_update_times(self) -> dict[Module, datetime]:
         return {
             Module.EDITOR: self.get_newest_update_time(Module.EDITOR),
@@ -86,14 +86,12 @@ class Checker:
         parsed = {}
         for key, value in raw_data.items():
             parsed[Module(key)] = datetime.fromisoformat(value)
-        
+
         return parsed
 
     def _save_version_times(self, save_times: dict[Module, datetime]):
         self._save_path.parent.mkdir(parents=True, exist_ok=True)
-        serializable = {
-            module.value: dt.isoformat() for module, dt in save_times.items()
-        }
+        serializable = {module.value: dt.isoformat() for module, dt in save_times.items()}
         with open(self._save_path, "w") as file:
             json.dump(serializable, file)
 
@@ -102,10 +100,11 @@ class Checker:
         times[module] = date
         self._save_version_times(times)
 
-    '''
-    Returns a dictionary where each value coresponds to if the modules has a newer version available
-    If there has been an error in trying to find the newest version the value is None
-    '''
+    """
+    Returns a dictionary where each value coresponds to if the modules has a newer version available.
+    If there has been an error in trying to find the newest version the value is None.
+    """
+
     def get_update_status(self) -> dict[Module, bool | None]:
         online = self._get_latest_update_times()
         offline = self._get_saved_version_times()

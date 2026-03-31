@@ -1,54 +1,26 @@
-from ctypes import windll
-from pathlib import Path
 import queue
 import sys
 import threading
 import tkinter as tk
 from datetime import datetime
-from getopt import GetoptError, getopt
+from pathlib import Path
 from tkinter import messagebox, ttk
+
 from requests import Session
-from auth import Authenticator
-from checker import Checker
+
 from enums.module import Module
-from installer import Installer
-from stdour_mirror import StdoutMirror
-
-
-def ensure_admin_on_start() -> None:
-    try:
-        is_admin = windll.shell32.IsUserAnAdmin()
-    except Exception:
-        is_admin = False
-
-    if not is_admin:
-        entry_script = Path(sys.argv[0]).resolve()
-        entry_args = " ".join([f'"{arg}"' for arg in sys.argv[1:]])
-
-        pythonw_candidate = Path(sys.executable).with_name("pythonw.exe")
-        python_exec = str(pythonw_candidate if pythonw_candidate.exists() else Path(sys.executable))
-        parameters = f'"{entry_script}" {entry_args}'.strip()
-
-        ret = windll.shell32.ShellExecuteW(
-            None,
-            "runas",
-            python_exec,
-            parameters,
-            str(entry_script.parent),
-            0,
-        )
-
-        if int(ret) > 32:
-            sys.exit(0)
-        else:
-            print("Spusťte program jako administrátor!")
-            sys.exit(1)
+from gui.stdout_mirror import StdoutMirror
+from services.auth import Authenticator
+from services.checker import Checker
+from services.installer import Installer
+from startup.cli_args import parse_startup_args
 
 
 class GeoStoreWindow(tk.Tk):
     def __init__(self, args: list[str] | None = None) -> None:
         super().__init__()
         self.title("GeoStore - Update and Install")
+        self._set_window_icon()
         self.geometry("760x680")
         self.minsize(760, 680)
         self.maxsize(760, 680)
@@ -70,7 +42,11 @@ class GeoStoreWindow(tk.Tk):
 
         self._is_logged_in = False
         self._workflow_running = False
-        self._startup_username, self._startup_password, self._startup_selection = self._parse_cli_args(args)
+
+        startup_args = parse_startup_args(args)
+        self._startup_username = startup_args.username
+        self._startup_password = startup_args.password
+        self._startup_selection = startup_args.selection
 
         self.checkbox_vars: dict[Module, tk.BooleanVar] = {}
         self.module_checkboxes: dict[Module, ttk.Checkbutton] = {}
@@ -90,28 +66,16 @@ class GeoStoreWindow(tk.Tk):
 
         self._apply_startup_values()
 
-    def _parse_cli_args(self, args: list[str] | None) -> tuple[str, str, str]:
-        if args is None:
-            args = sys.argv[1:]
-
-        user_name = ""
-        password = ""
-        selection = ""
+    def _set_window_icon(self) -> None:
+        icon_path = Path(__file__).resolve().parents[2] / "icon.ico"
+        if not icon_path.exists():
+            return
 
         try:
-            parsed_args, _ = getopt(args, "u:p:s:", ["jmeno=", "heslo=", "vyber="])
-        except GetoptError:
-            return user_name, password, selection
-
-        for arg, val in parsed_args:
-            if arg in ("-u", "--jmeno"):
-                user_name = val
-            elif arg in ("-p", "--heslo"):
-                password = val
-            elif arg in ("-s", "--vyber"):
-                selection = val
-
-        return user_name, password, selection
+            self.iconbitmap(str(icon_path))
+        except tk.TclError:
+            # Keep default icon if the runtime cannot load .ico.
+            pass
 
     def _apply_startup_values(self) -> None:
         if self._startup_username:
@@ -380,9 +344,3 @@ class GeoStoreWindow(tk.Tk):
         self.login_button = ttk.Button(button_row, text="Přihlásit", command=self._on_login)
         self.login_button.grid(row=0, column=0)
         username_entry.focus_set()
-
-
-if __name__ == "__main__":
-    ensure_admin_on_start()
-    app = GeoStoreWindow()
-    app.mainloop()

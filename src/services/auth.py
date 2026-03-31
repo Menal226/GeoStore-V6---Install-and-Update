@@ -1,4 +1,5 @@
 from requests import Session
+
 from resources.urls import GEOSTORE_URL
 
 
