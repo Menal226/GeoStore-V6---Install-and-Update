@@ -5,7 +5,7 @@ from pathlib import Path
 
 from requests import Session
 
-from enums.module import Module
+from enums.module import Module, get_module_config, get_module_order
 from resources.urls import GEOSTORE_URL
 
 
@@ -15,39 +15,21 @@ class Checker:
         self._save_path = Path(getenv("APPDATA")) / "GeoStore Updater" / "save_times"
 
     def _name_to_payload(self, name: Module) -> dict[str, str]:
-        match name:
-            case Module.EDITOR | Module.DTMCR:
-                arg1, arg2 = "fldFilesDTMCR", "DTM"
-            case Module.DWG:
-                arg1, arg2 = "fldFilesDMVS", "DWG"
-            case Module.IG:
-                arg1, arg2 = "fldFilesIG", "IG"
-            case Module.THREED:
-                arg1, arg2 = "fldFilesLAS", "LAS"
+        config = get_module_config(name)
         return {
             "action": "mobile.review",
             "user_seat": "",
-            "user_role": arg2,
-            "folder_id": arg1,
+            "user_role": config.checker_user_role,
+            "folder_id": config.checker_folder_id,
             "parameters": [{"name": "page", "type": "N", "value": 1}, {"name": "filter", "value": None}],
         }
 
     def _process_response(self, response: dict, name: Module) -> datetime:
-        match name:
-            case Module.EDITOR:
-                file = "zakladni_graficky_editor_GSV6_x64.zip"
-            case Module.DTMCR:
-                file = "castecna_instalace_aplikace_DTMCR.zip"
-            case Module.DWG:
-                file = "instalace_rozš&#237;řen&#237;_GSV6_DWG_DGN_x64.zip"
-            case Module.IG:
-                file = "castecna_instalace_aplikace_IG.zip"
-            case Module.THREED:
-                file = "castecna_instalace_aplikace_3D.zip"
+        expected_file_name = get_module_config(name).checker_file_name
 
         data = response.get("table", {}).get("data", {}).get("rows", [])
         for possible in data:
-            if possible[3] == file:
+            if possible[3] == expected_file_name:
                 return datetime.strptime(possible[4], "%d.%m.%Y")
         return datetime.fromtimestamp(0)
 
@@ -65,13 +47,7 @@ class Checker:
         return self._process_response(resp_json, name)
 
     def _get_latest_update_times(self) -> dict[Module, datetime]:
-        return {
-            Module.EDITOR: self.get_newest_update_time(Module.EDITOR),
-            Module.DTMCR: self.get_newest_update_time(Module.DTMCR),
-            Module.DWG: self.get_newest_update_time(Module.DWG),
-            Module.IG: self.get_newest_update_time(Module.IG),
-            Module.THREED: self.get_newest_update_time(Module.THREED),
-        }
+        return {module: self.get_newest_update_time(module) for module in get_module_order()}
 
     def _get_saved_version_times(self) -> dict[Module, datetime]:
         if not self._save_path.exists():
@@ -85,7 +61,11 @@ class Checker:
 
         parsed = {}
         for key, value in raw_data.items():
-            parsed[Module(key)] = datetime.fromisoformat(value)
+            try:
+                parsed[Module(key)] = datetime.fromisoformat(value)
+            except (TypeError, ValueError):
+                # Ignore stale/invalid saved entries from previous app versions.
+                continue
 
         return parsed
 

@@ -8,7 +8,7 @@ from tkinter import messagebox, ttk
 
 from requests import Session
 
-from enums.module import Module
+from enums.module import Module, get_module_config, get_module_from_selection_key, get_module_order
 from gui.stdout_mirror import StdoutMirror
 from services.auth import Authenticator
 from services.checker import Checker
@@ -27,13 +27,7 @@ class GeoStoreWindow(tk.Tk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self._module_order = (
-            Module.EDITOR,
-            Module.DTMCR,
-            Module.IG,
-            Module.THREED,
-            Module.DWG,
-        )
+        self._module_order = get_module_order()
 
         self._session = Session()
         self._auth = Authenticator(self._session)
@@ -90,19 +84,12 @@ class GeoStoreWindow(tk.Tk):
 
     def _apply_selection_string(self, selected: str) -> None:
         for char in selected:
-            match char:
-                case "1":
-                    self.checkbox_vars[Module.EDITOR].set(not self.checkbox_vars[Module.EDITOR].get())
-                case "2":
-                    self.checkbox_vars[Module.DTMCR].set(not self.checkbox_vars[Module.DTMCR].get())
-                case "3":
-                    self.checkbox_vars[Module.IG].set(not self.checkbox_vars[Module.IG].get())
-                case "4":
-                    self.checkbox_vars[Module.THREED].set(not self.checkbox_vars[Module.THREED].get())
-                case "5":
-                    self.checkbox_vars[Module.DWG].set(not self.checkbox_vars[Module.DWG].get())
-                case _:
-                    continue
+            module = get_module_from_selection_key(char)
+            if module is None or module not in self.checkbox_vars:
+                continue
+
+            current = self.checkbox_vars[module].get()
+            self.checkbox_vars[module].set(not current)
 
     def _module_selection_setup(self, frame: ttk.Frame) -> None:
         selection_frame = ttk.LabelFrame(frame, text="Výběr Modulů", padding=8)
@@ -122,7 +109,7 @@ class GeoStoreWindow(tk.Tk):
 
         for row_index, module in enumerate(self._module_order, start=1):
             left_label = ttk.Label(selection_frame, text="Vyžaduje přihlášení", font=("TkDefaultFont", 10, "bold"))
-            right_label = ttk.Label(selection_frame, text=module.value)
+            right_label = ttk.Label(selection_frame, text=self._get_label_name(module))
 
             checked = tk.BooleanVar(value=False)
             checkbox = ttk.Checkbutton(selection_frame, variable=checked, state="disabled")
@@ -242,7 +229,7 @@ class GeoStoreWindow(tk.Tk):
     def _set_logged_out_labels(self) -> None:
         for module in self._module_order:
             self.status_labels[module].configure(text="Vyžaduje přihlášení", foreground="black")
-            self.name_labels[module].configure(text=module.value)
+            self.name_labels[module].configure(text=self._get_label_name(module))
 
     def _get_status_label(self, status: bool | None) -> tuple[str, str]:
         if status is False:
@@ -252,14 +239,7 @@ class GeoStoreWindow(tk.Tk):
         return "Nelze ověřit verzi", "orange"
 
     def _get_label_name(self, module: Module) -> str:
-        names = {
-            Module.EDITOR: "Základní Grafický Editor",
-            Module.DTMCR: "Aplikace DTMCR",
-            Module.IG: "Aplikace IG",
-            Module.THREED: "Aplikace 3D",
-            Module.DWG: "Aplikace DWG",
-        }
-        return names.get(module, module.value)
+        return get_module_config(module).display_name
 
     def _stdout_mirror_setup(self, container: ttk.Frame) -> None:
         frame = ttk.LabelFrame(container, text="Informace O Průběhu Instalace", padding=8)

@@ -7,17 +7,7 @@ from zipfile import ZipFile
 from requests import Session
 from tqdm import tqdm
 
-from enums.module import Module
-from resources.urls import (
-    D3_FULL_DOWNLOAD_URL,
-    D3_PARTIAL_DOWNLOAD_URL,
-    DTMCR_FULL_DOWNLOAD_URL,
-    DTMCR_PARTIAL_DOWNLOAD_URL,
-    DWG_DONWLOAD_URL,
-    EDITOR_DOWNLOAD_URL,
-    IG_FULL_DOWNLOAD_URL,
-    IG_PARTIAL_DOWNLOAD_URL,
-)
+from enums.module import Module, get_module_config
 
 
 class Installer:
@@ -31,14 +21,14 @@ class Installer:
                 continue
 
             module_name = key.value
+            module_cfg = get_module_config(key)
             try:
                 self._download_from_url(key, is_install)
                 self._unzip_file(f"C:\\{module_name}.zip", "C:\\", module_name)
                 print("Postupujte podle pokynů v novém okně.")
-                self._run_program("C:\\V6-INSTALL\\setup.exe" if key == Module.EDITOR else "C:\\V6-INSTALL\\Install.exe")
-                if key == Module.EDITOR:
-                    self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2010redist_x64.exe")
-                    self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2012redist_x64.exe")
+                self._run_program(f"C:\\V6-INSTALL\\{module_cfg.installer_executable}")
+                for executable in module_cfg.post_install_executables:
+                    self._run_program(executable)
                 print(f"{'Instalace' if is_install else 'Aktualizace'} {module_name} byla dokončena")
                 processed.append(key)
             except Exception as ex:
@@ -49,23 +39,9 @@ class Installer:
 
         return processed
 
-    def _translate_url(self, name: Module, is_install: bool) -> str:
-        match name:
-            case Module.EDITOR:
-                return EDITOR_DOWNLOAD_URL
-            case Module.DTMCR:
-                return DTMCR_FULL_DOWNLOAD_URL if is_install else DTMCR_PARTIAL_DOWNLOAD_URL
-            case Module.THREED:
-                return D3_FULL_DOWNLOAD_URL if is_install else D3_PARTIAL_DOWNLOAD_URL
-            case Module.IG:
-                return IG_FULL_DOWNLOAD_URL if is_install else IG_PARTIAL_DOWNLOAD_URL
-            case Module.DWG:
-                return DWG_DONWLOAD_URL
-            case _:
-                raise ValueError(f"Unsupported program: {name}")
-
     def _download_from_url(self, name: Module, is_install: bool) -> None:
-        resp = self._session.get(self._translate_url(name, is_install), stream=True)
+        url = get_module_config(name).get_download_url(is_install)
+        resp = self._session.get(url, stream=True)
 
         total_size = int(resp.headers.get("content-length", 0))
         block_size = 1024
