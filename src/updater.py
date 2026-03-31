@@ -20,7 +20,9 @@ class Updater:
     def start(self):
         self._make_admin()
         self._process_args()
-        self._auth.login(self._user_name, self._user_pwd)
+        if not self._auth.login(self._user_name, self._user_pwd):
+            print("Přihlášení se nezdařilo, program bude ukončen.")
+            return
         if not self._skip_selection:
             self._selection.select_wanted()
         self._installer.start_downloads(self._selection.selected, self._selection.is_install)
@@ -57,7 +59,7 @@ class Updater:
             if int(ret) > 32:
                 exit(0)
             else:
-                print("\033[31mSpusťte program jako administrátor!\033[0m")
+                print("Spusťte program jako administrátor!")
                 exit(1)
 
 if __name__ == "__main__":

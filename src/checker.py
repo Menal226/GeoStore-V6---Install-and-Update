@@ -1,6 +1,6 @@
 from requests import Session
 from enums.module import Module
-from urls import GEOSTORE_URL
+from resources.urls import GEOSTORE_URL
 from datetime import datetime
 from pathlib import Path
 from os import getenv
@@ -32,7 +32,7 @@ class Checker:
             ]
         }
     
-    def _process_responce(self, responce, name: Module) -> datetime:
+    def _process_response(self, response: dict, name: Module) -> datetime:
         match name:
             case Module.EDITOR:
                 file = "zakladni_graficky_editor_GSV6_x64.zip"
@@ -45,7 +45,7 @@ class Checker:
             case Module.THREED:
                 file = "castecna_instalace_aplikace_3D.zip"
 
-        data = responce.get("table", []).get("data", []).get("rows", [])
+        data = response.get("table", {}).get("data", {}).get("rows", [])
         for possible in data:
             if possible[3] == file:
                 return datetime.strptime(possible[4], "%d.%m.%Y")
@@ -62,7 +62,7 @@ class Checker:
             print(f"Nepodařilo se získat informaci o datu nejnovější verze {name}")
             return datetime.fromtimestamp(0)
 
-        return self._process_responce(resp_json, name)
+        return self._process_response(resp_json, name)
     
     def _get_latest_update_times(self) -> dict[Module, datetime]:
         return {
@@ -73,11 +73,15 @@ class Checker:
             Module.THREED: self.get_newest_update_time(Module.THREED),
         }
 
-    def _get_saved_version_times(self):
+    def _get_saved_version_times(self) -> dict[Module, datetime]:
         if not self._save_path.exists():
             return {}
+
         with open(self._save_path, "r") as file:
-            raw_data = json.load(file)
+            try:
+                raw_data = json.load(file)
+            except json.JSONDecodeError:
+                return {}
 
         parsed = {}
         for key, value in raw_data.items():
@@ -102,10 +106,15 @@ class Checker:
     Returns a dictionary where each value coresponds to if the modules has a newer version available
     If there has been an error in trying to find the newest version the value is None
     '''
-    def get_update_status(self) -> dict[Module, bool]:
+    def get_update_status(self) -> dict[Module, bool | None]:
         online = self._get_latest_update_times()
         offline = self._get_saved_version_times()
+        failed = datetime.fromtimestamp(0)
 
-        return {key: online.get(key, datetime.fromtimestamp(0)) != offline.get(key, datetime.fromtimestamp(0)) 
-                if online != datetime.fromtimestamp(0) and offline != datetime.fromtimestamp(0) else None 
-                for key in online.keys()}
+        statuses: dict[Module, bool | None] = {}
+        for key, online_time in online.items():
+            if online_time == failed:
+                statuses[key] = None
+                continue
+            statuses[key] = online_time != offline.get(key, failed)
+        return statuses

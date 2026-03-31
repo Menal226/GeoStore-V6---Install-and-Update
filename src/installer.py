@@ -1,10 +1,11 @@
 from os import path, remove
 from shutil import rmtree
 from subprocess import run
+import sys
 from zipfile import ZipFile
 from requests import Session
 from tqdm import tqdm
-from urls import (
+from resources.urls import (
     D3_FULL_DOWNLOAD_URL,
     D3_PARTIAL_DOWNLOAD_URL,
     DTMCR_FULL_DOWNLOAD_URL,
@@ -21,23 +22,32 @@ class Installer:
     def __init__(self, session: Session):
         self._session = session
 
-    def start_downloads(self, selected: dict[Module, bool], is_install: bool) -> None:
+    def start_downloads(self, selected: dict[Module, bool], is_install: bool) -> list[Module]:
+        processed: list[Module] = []
         for key, val in selected.items():
             if not val:
                 continue
+
+            module_name = key.value
             try:
                 self._download_from_url(key, is_install)
-                self._unzip_file(f"C:\\{key}.zip", "C:\\", key)
+                self._unzip_file(f"C:\\{module_name}.zip", "C:\\", module_name)
                 print("Postupujte podle pokynů v novém okně.")
                 self._run_program("C:\\V6-INSTALL\\setup.exe" if key == Module.EDITOR else "C:\\V6-INSTALL\\Install.exe")
                 if key == Module.EDITOR:
                     self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2010redist_x64.exe")
                     self._run_program(r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2012redist_x64.exe")
-                print(f"{"Instalace" if is_install else "Aktualizace"} {key} byla dokončena")
+                print(f"{'Instalace' if is_install else 'Aktualizace'} {module_name} byla dokončena")
+                processed.append(key)
             except Exception as ex:
-                print(f"\033[31mPři {"instalaci" if is_install else "aktualizaci"} {key} nastala chyba typu {ex}. Tato položka bude přeskočena! \033[0m")
+                print(
+                    f"Při {'instalaci' if is_install else 'aktualizaci'} {module_name} "
+                    f"nastala chyba typu {ex}. Tato položka bude přeskočena!"
+                )
 
-    def _translate_url(self, name: str, is_install: bool) -> str:
+        return processed
+
+    def _translate_url(self, name: Module, is_install: bool) -> str:
         match name:
             case Module.EDITOR:
                 return EDITOR_DOWNLOAD_URL
@@ -52,24 +62,25 @@ class Installer:
             case _:
                 raise ValueError(f"Unsupported program: {name}")
 
-    def _download_from_url(self, name: str, is_install: bool) -> None:
+    def _download_from_url(self, name: Module, is_install: bool) -> None:
         resp = self._session.get(self._translate_url(name, is_install), stream=True)
 
         total_size = int(resp.headers.get("content-length", 0))
         block_size = 1024
 
-        with open(f"C:\\{name}.zip", "wb") as file, tqdm(
+        with open(f"C:\\{name.value}.zip", "wb") as file, tqdm(
             total=total_size,
             unit="B",
             unit_scale=True,
-            desc=f"Probíhá stahování {name}",
+            desc=f"Probíhá stahování {name.value}",
+            file=sys.stdout,
         ) as progress_bar:
             for chunk in resp.iter_content(chunk_size=block_size):
                 if chunk:
                     file.write(chunk)
                     progress_bar.update(len(chunk))
 
-        print(f"✅ Stahování {name} dokončeno!")
+        print(f"✅ Stahování {name.value} dokončeno!")
 
     def _unzip_file(self, old: str, new: str, name: str) -> None:
         print(f"Probíhá extrahování souboru {name}.zip")

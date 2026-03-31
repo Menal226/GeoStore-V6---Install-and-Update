@@ -99,5 +99,5 @@ class SelectionController:
 
     def _enter_process(self) -> None:
         if self._confirmed == 0:
-            print("\033[31mPro potvrzení výběru napište stiskněte znovu ENTER\033[0m ")
+            print("Pro potvrzení výběru napište stiskněte znovu ENTER")
         self._confirmed += 1
