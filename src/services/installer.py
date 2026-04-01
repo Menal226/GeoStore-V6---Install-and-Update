@@ -8,6 +8,7 @@ from requests import Session
 from tqdm import tqdm
 
 from enums.module import Module, get_module_config
+from services.licenser import Licenser
 
 
 class Installer:
@@ -27,8 +28,11 @@ class Installer:
                 self._unzip_file(f"C:\\{module_name}.zip", "C:\\", module_name)
                 print("Postupujte podle pokynů v novém okně.")
                 self._run_program(f"C:\\V6-INSTALL\\{module_cfg.installer_executable}")
-                for executable in module_cfg.post_install_executables:
-                    self._run_program(executable)
+                if is_install:
+                    for executable in module_cfg.post_install_executables:
+                        self._run_program(executable)
+                    if module_cfg.install_license:
+                        Licenser(self._session).add_license_to_instalation()
                 print(f"{'Instalace' if is_install else 'Aktualizace'} {module_name} byla dokončena")
                 processed.append(key)
             except Exception as ex:

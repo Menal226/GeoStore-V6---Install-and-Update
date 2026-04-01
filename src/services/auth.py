@@ -1,17 +1,15 @@
 from requests import Session
 
-from resources.urls import GEOSTORE_URL
+from resources.urls import GEOSTORE_URL, LICENSE_URL
 
 
 class Authenticator:
     def __init__(self, session: Session):
         self._session = session
 
-    def login(self, user_name: str, password: str) -> bool:
-        current_user = user_name.strip()
-        current_password = password
+    def _login_to(self, user_name: str, password: str, url: str) -> bool:
 
-        if not current_user or not current_password:
+        if not user_name or not password:
             print("Vyplňte uživatelské jméno i heslo.")
             return False
 
@@ -20,13 +18,13 @@ class Authenticator:
             "parameters": [
                 {"name": "action", "value": "mobile.authentication"},
                 {"name": "identifier", "value": ""},
-                {"name": "user_name", "value": current_user},
-                {"name": "user_password", "value": current_password},
+                {"name": "user_name", "value": user_name},
+                {"name": "user_password", "value": password},
             ],
         }
 
         try:
-            resp = self._session.post(GEOSTORE_URL, json=payload)
+            resp = self._session.post(url, json=payload)
         except Exception:
             print(
                 "Nastala chyba při komunikaci se servery GeoStore, zkontrolujte připojení k Internetu a zkuste znovu."
@@ -50,3 +48,13 @@ class Authenticator:
             return False
 
         return True
+
+    def download_server_login(self, user_name: str, password: str) -> bool:
+        return self._login_to(user_name, password, GEOSTORE_URL)
+
+    def license_server_login(self, user_name: str, password: str) -> bool:
+        return self._login_to(user_name, password, LICENSE_URL)
+
+    def login(self, user_name: str, password: str):
+        return self.download_server_login(user_name, password) and \
+            self.license_server_login(user_name, password)

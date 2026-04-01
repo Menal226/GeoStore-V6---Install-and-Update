@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 from resources.urls import (
-    D3_FULL_DOWNLOAD_URL,
-    D3_PARTIAL_DOWNLOAD_URL,
+    THREED_FULL_DOWNLOAD_URL,
+    THREED_PARTIAL_DOWNLOAD_URL,
     DTMCR_FULL_DOWNLOAD_URL,
     DTMCR_PARTIAL_DOWNLOAD_URL,
     DWG_DONWLOAD_URL,
@@ -28,6 +28,7 @@ class ModuleConfig:
     checker_user_role: str
     checker_file_name: str
     install_download_url: str
+    install_license: bool = False
     update_download_url: str | None = None
     installer_executable: str = "Install.exe"
     post_install_executables: tuple[str, ...] = ()
@@ -46,6 +47,7 @@ MODULE_CONFIGS: dict[Module, ModuleConfig] = {
         checker_user_role="DTM",
         checker_file_name="zakladni_graficky_editor_GSV6_x64.zip",
         install_download_url=EDITOR_DOWNLOAD_URL,
+        install_license=True,
         installer_executable="setup.exe",
         post_install_executables=(
             r"C:\Program Files\GEOVAP\GeoStoreV6\Redist\vc2010redist_x64.exe",
@@ -76,8 +78,8 @@ MODULE_CONFIGS: dict[Module, ModuleConfig] = {
         checker_folder_id="fldFilesLAS",
         checker_user_role="LAS",
         checker_file_name="castecna_instalace_aplikace_3D.zip",
-        install_download_url=D3_FULL_DOWNLOAD_URL,
-        update_download_url=D3_PARTIAL_DOWNLOAD_URL,
+        install_download_url=THREED_FULL_DOWNLOAD_URL,
+        update_download_url=THREED_PARTIAL_DOWNLOAD_URL,
     ),
     Module.DWG: ModuleConfig(
         display_name="Aplikace DWG",

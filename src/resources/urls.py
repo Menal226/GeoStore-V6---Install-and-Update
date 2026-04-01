@@ -9,5 +9,7 @@ DWG_DONWLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.as
 DTMCR_FULL_DOWNLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.ashx?action=repositoryFileDownload&path=&file=V6-DTMCR_s_prostredim.zip&output=kompletni_instalace_aplikace_DTMCR_HW_klic_x64.zip&mode=attachment&method=stream"
 DTMCR_PARTIAL_DOWNLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.ashx?action=repositoryFileDownload&path=&file=V6-DTMCR.zip&output=castecna_instalace_aplikace_DTMCR.zip&mode=attachment&method=stream"
 
-D3_FULL_DOWNLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.ashx?action=repositoryFileDownload&path=&file=V6-3D_s_prostredim.zip&output=kompletni_instalace_aplikace_3DLAS_HW_klic_x64.zip&mode=attachment&method=stream"
-D3_PARTIAL_DOWNLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.ashx?action=repositoryFileDownload&path=&file=V6-3D.zip&output=castecna_instalace_aplikace_3D.zip&mode=attachment&method=stream"
+THREED_FULL_DOWNLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.ashx?action=repositoryFileDownload&path=&file=V6-3D_s_prostredim.zip&output=kompletni_instalace_aplikace_3DLAS_HW_klic_x64.zip&mode=attachment&method=stream"
+THREED_PARTIAL_DOWNLOAD_URL = "https://portal.geostore.cz/v6/support/framework/AsyncJSON.ashx?action=repositoryFileDownload&path=&file=V6-3D.zip&output=castecna_instalace_aplikace_3D.zip&mode=attachment&method=stream"
+
+LICENSE_URL = "https://install.geovap.cz/licman/app/framework/AsyncJSON.ashx"
